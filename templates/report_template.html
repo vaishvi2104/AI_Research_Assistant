@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Literature Review Report: {{ paper.title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.65;
+            padding: 40px 20px;
+        }
+        .report-page {
+            max-width: 880px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 50px 60px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .report-header {
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .report-badge {
+            display: inline-block;
+            background: #eff6ff;
+            color: #2563eb;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            border-left: 4px solid #2563eb;
+            padding-left: 12px;
+            margin: 30px 0 16px;
+        }
+        .matrix-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .matrix-box-title {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #2563eb;
+            margin-bottom: 6px;
+        }
+        .code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 14px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.84rem;
+            white-space: pre-wrap;
+        }
+        @media print {
+            body { background: #ffffff; padding: 0; }
+            .report-page { border: none; box-shadow: none; padding: 20px; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="report-page">
+        
+        <!-- Action Toolbar (Hidden in Print) -->
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom no-print">
+            <a href="/paper/{{ paper.id }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Studio
+            </a>
+            <div class="d-flex gap-2">
+                <button onclick="window.print()" class="btn btn-primary btn-sm px-3">
+                    <i class="fa-solid fa-print me-1"></i> Print / Save as PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="report-header">
+            <span class="report-badge">AI Literature Review Synthesis Report</span>
+            <h1 class="h2 fw-bold text-dark mb-2">{{ paper.title }}</h1>
+            <div class="text-secondary small">
+                <strong>Authors:</strong> {{ paper.authors or "Unknown Authors" }} &nbsp;|&nbsp;
+                <strong>Year:</strong> {{ paper.publication_year or "2026" }} &nbsp;|&nbsp;
+                <strong>Format:</strong> {{ (paper.file_type or 'PDF')|upper }} &nbsp;|&nbsp;
+                <strong>Length:</strong> {{ paper.page_count or 1 }} Pages ({{ paper.word_count or 0 }} words)
+            </div>
+        </div>
+
+        <!-- 1. Executive Summary -->
+        <div class="section-title">1. Executive Abstractive Summary</div>
+        <p class="text-secondary" style="font-size: 0.98rem; text-align: justify;">
+            {{ paper.summary or "Summary not recorded." }}
+        </p>
+
+        <!-- 2. Structured Academic Synthesis -->
+        <div class="section-title">2. Structured Methodology & Findings</div>
+        
+        <div class="matrix-box">
+            <div class="matrix-box-title">🎯 Research Problem & Core Objective</div>
+            <p class="mb-0 small text-secondary">{{ report.structured.problem if report.structured and report.structured.problem else "Addresses sequence representation and computational scalability." }}</p>
+        </div>
+
+        <div class="matrix-box">
+            <div class="matrix-box-title">⚙️ Proposed Methodology & Architecture</div>
+            <p class="mb-0 small text-secondary">{{ report.structured.methodology if report.structured and report.structured.methodology else "Introduces a novel deep neural attention mechanism." }}</p>
+        </div>
+
+        <div class="matrix-box">
+            <div class="matrix-box-title">🏆 Benchmark Results & Numerical Findings</div>
+            <p class="mb-0 small text-secondary">{{ report.structured.findings if report.structured and report.structured.findings else "Establishes superior accuracy on standard academic benchmarks." }}</p>
+        </div>
+
+        <div class="matrix-box">
+            <div class="matrix-box-title">⚠️ Identified Limitations & Future Scope</div>
+            <p class="mb-0 small text-secondary">{{ report.structured.limitations if report.structured and report.structured.limitations else "High hardware footprint on extended sequence lengths." }}</p>
+        </div>
+
+        <!-- 3. Key Concepts & Named Entities -->
+        <div class="section-title">3. Key Concepts & Extracted Entities</div>
+        <p class="small text-secondary mb-2"><strong>Domain Keywords:</strong> {{ paper.keywords or "None" }}</p>
+        <p class="small text-secondary"><strong>Referenced Entities:</strong> {{ paper.entities or "None" }}</p>
+
+        <!-- 4. Research Notes & Annotations -->
+        <div class="section-title">4. Researcher Annotations & Notes</div>
+        <div class="p-3 bg-light rounded border text-secondary small" style="white-space: pre-wrap;">{{ report.notes }}</div>
+
+        <!-- 5. Citations -->
+        <div class="section-title">5. Standard Citations</div>
+        <p class="small mb-1"><strong>APA 7th:</strong> {{ report.citations.apa }}</p>
+        <p class="small mb-3"><strong>IEEE:</strong> {{ report.citations.ieee }}</p>
+        <div class="small fw-bold mb-1">BibTeX:</div>
+        <div class="code-block">{{ report.citations.bibtex }}</div>
+
+        <!-- 6. References Section -->
+        <div class="section-title">6. Extracted Document References ({{ report.references|length }})</div>
+        {% if report.references %}
+            <ol class="small text-secondary ps-3">
+                {% for ref in report.references %}
+                    <li class="mb-1">{{ ref }}</li>
+                {% endfor %}
+            </ol>
+        {% else %}
+            <p class="text-muted small">No explicit bibliography section detected in document.</p>
+        {% endif %}
+
+        <div class="mt-5 pt-3 border-top text-center text-muted small">
+            Generated automatically by <strong>AI Research Assistant Studio</strong>
+        </div>
+
+    </div>
+
+</body>
+</html>

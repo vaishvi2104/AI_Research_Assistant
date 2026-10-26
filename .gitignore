@@ -1,0 +1,36 @@
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploaded Files (Keep directory structure)
+uploads/*
+!uploads/.gitkeep
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment & Local Secrets
+.env
+.env.local
+
+# Test & Evaluation outputs
+evaluation_charts/*.png
+test_*.log

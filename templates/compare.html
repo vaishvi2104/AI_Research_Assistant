@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Comparative Literature Matrix | AI Research Assistant{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <!-- Header Card -->
+    <div class="studio-header-card mb-4">
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard_page') }}"><i class="fa-solid fa-arrow-left me-1"></i> Library Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Comparative Literature Matrix</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-dark"><i class="fa-solid fa-table-columns text-primary me-2"></i>Multi-Paper Literature Matrix</h1>
+                <p class="text-secondary small mb-0">Side-by-side comparative analysis of research objectives, architectures, benchmarks, and limitations</p>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn-brand-secondary btn-sm" onclick="window.print()">
+                    <i class="fa-solid fa-print me-1"></i> Print / Export PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paper Selection Bar -->
+    <div class="studio-panel-card mb-4 p-3">
+        <label class="form-label fw-bold text-dark small mb-2"><i class="fa-solid fa-layer-group text-primary me-1"></i> Compare Papers in Library:</label>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            {% for paper in all_papers %}
+                <button 
+                    class="action-chip-btn {% if paper in selected_papers %}btn-primary text-white border-primary{% endif %}"
+                    onclick="togglePaperSelection('{{ paper.id }}')">
+                    <i class="fa-solid {% if paper in selected_papers %}fa-check-circle{% else %}fa-circle-plus{% endif %} me-1"></i>
+                    <span>{{ paper.title[:35] }}...</span>
+                </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Synthesis Verdict Banner -->
+    {% if matrix.synthesis %}
+        <div class="p-3 bg-primary-subtle border border-primary-subtle rounded-3 mb-4 text-primary">
+            <div class="fw-bold mb-1"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Literature Synthesis Verdict</div>
+            <p class="mb-0 small text-dark" style="line-height: 1.6;">{{ matrix.synthesis }}</p>
+        </div>
+    {% endif %}
+
+    <!-- Comparison Matrix Table -->
+    {% if matrix.columns and matrix.columns|length > 0 %}
+        <div class="papers-table-card mb-4">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 220px;" class="bg-secondary-subtle fw-bold text-dark">Research Dimension</th>
+                            {% for col in matrix.columns %}
+                                <th class="text-center bg-white" style="min-width: 260px;">
+                                    <span class="badge-tag-pill badge-blue mb-1">{{ col.format }}</span>
+                                    <div class="fw-bold text-dark fs-6">{{ col.title }}</div>
+                                    <div class="text-muted small fw-normal">{{ col.authors }} ({{ col.year }})</div>
+                                    <a href="/paper/{{ col.id }}" class="btn btn-sm btn-outline-primary py-0 px-2 mt-2">
+                                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Studio
+                                    </a>
+                                </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in matrix.rows %}
+                            <tr>
+                                <td class="bg-light fw-bold text-dark">
+                                    <span class="badge-tag-pill {{ row.badge_class }} mb-1 d-inline-block">{{ row.dimension }}</span>
+                                </td>
+                                {% for val in row.cells %}
+                                    <td class="small text-secondary" style="line-height: 1.6;">
+                                        {{ val }}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="p-5 text-center bg-white rounded-3 border">
+            <div class="text-muted mb-2 fs-2"><i class="fa-solid fa-table"></i></div>
+            <h5>No Papers Selected for Comparison</h5>
+            <p class="text-muted small">Select at least 2 papers from the list above to generate a comparative literature matrix.</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function togglePaperSelection(paperId) {
+        const pid = Number(paperId);
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentIds = urlParams.get('ids') ? urlParams.get('ids').split(',').map(Number) : [];
+        
+        if (currentIds.includes(pid)) {
+            currentIds = currentIds.filter(id => id !== pid);
+        } else {
+            currentIds.push(pid);
+        }
+
+        window.location.href = `/compare?ids=${currentIds.join(',')}`;
+    }
+</script>
+{% endblock %}

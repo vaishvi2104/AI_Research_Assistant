@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In | AI Research Assistant{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+
+        <div class="auth-header">
+            <div class="auth-icon-circle">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2 class="auth-title">Welcome Back</h2>
+            <p class="auth-subtitle">Sign in to access your research dashboard</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            
+            <!-- Email Field -->
+            <div class="form-group-custom">
+                <label for="email">Email Address</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-envelope input-icon-left"></i>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-control-custom"
+                        placeholder="name@university.edu"
+                        value="{{ email or '' }}"
+                        required
+                        autofocus>
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group-custom">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <label for="password" class="mb-0">Password</label>
+                </div>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-key input-icon-left"></i>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="form-control-custom"
+                        placeholder="••••••••"
+                        required>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-brand-primary w-100 py-3 mt-2">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Sign In to Studio</span>
+            </button>
+
+        </form>
+
+        <div class="auth-footer-text">
+            <span>Don't have an account yet?</span>
+            <a href="{{ url_for('auth.register') }}" class="ms-1">Create Account</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

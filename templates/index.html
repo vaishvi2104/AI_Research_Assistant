@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}AI Research Assistant | Literature Review & NLP Studio{% endblock %}
+
+{% block content %}
+
+<!-- ==========================================================================
+     HERO SECTION
+     ========================================================================== -->
+<section class="landing-hero">
+    <div class="container">
+        
+        <div class="hero-pill-badge">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Intelligent Academic Research Studio</span>
+        </div>
+
+        <h1 class="hero-main-title">
+            Analyze Research Papers with <span class="hero-gradient-text">State-of-the-Art AI</span>
+        </h1>
+
+        <p class="hero-subtitle">
+            Upload academic publications, automate literature reviews, extract key methodologies, discover named entities, and interrogate papers interactively in seconds.
+        </p>
+
+        <div class="hero-cta-group">
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('dashboard.dashboard_page') }}" class="btn-brand-primary btn-lg">
+                    <i class="fa-solid fa-table-columns"></i>
+                    <span>Go to My Dashboard</span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn-brand-primary btn-lg">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Get Started </span>
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn-brand-secondary btn-lg">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>Sign In</span>
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="hero-stats-strip">
+            <div class="hero-stat-item">
+                <div class="hero-stat-num">BART & BERT</div>
+                <div class="hero-stat-label">Neural NLP Models</div>
+            </div>
+            <div class="hero-stat-item">
+                <div class="hero-stat-num">KeyBERT</div>
+                <div class="hero-stat-label">Concept Extraction</div>
+            </div>
+            <div class="hero-stat-item">
+                <div class="hero-stat-num">spaCy NER</div>
+                <div class="hero-stat-label">Entity Recognition</div>
+            </div>
+            <div class="hero-stat-item">
+                <div class="hero-stat-num">&lt; 10s</div>
+                <div class="hero-stat-label">Analysis Speed</div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- ==========================================================================
+     FEATURE SHOWCASE GRID
+     ========================================================================== -->
+<section class="features-section" id="features">
+    <div class="container">
+
+        <div class="section-eyebrow">Comprehensive AI Capabilities</div>
+        <h2 class="section-headline">Everything You Need for Literature Synthesis</h2>
+        <p class="section-subtext">
+            Designed specifically for researchers, students, and engineers to break down dense scientific papers into actionable insights.
+        </p>
+
+        <div class="row g-4">
+            
+            <!-- Feature 1: AI Summary -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper feature-icon-blue">
+                        <i class="fa-solid fa-file-lines"></i>
+                    </div>
+                    <h3>Abstractive Summarization</h3>
+                    <p>
+                        Generate fluent, concise executive summaries of long research documents powered by transformer models.
+                    </p>
+                    <span class="feature-tag badge-blue">DistilBART Pipeline</span>
+                </div>
+            </div>
+
+            <!-- Feature 2: Interactive Q&A -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper feature-icon-purple">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <h3>Interactive Paper Q&A</h3>
+                    <p>
+                        Ask natural-language questions about datasets, methodology, and conclusions, receiving pinpoint answers with context.
+                    </p>
+                    <span class="feature-tag badge-purple">DistilBERT SQuAD</span>
+                </div>
+            </div>
+
+            <!-- Feature 3: Keyphrase Extraction -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper feature-icon-cyan">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <h3>Key Concept Extraction</h3>
+                    <p>
+                        Automatically identify core research topics, key terminology, and high-relevance domain keywords.
+                    </p>
+                    <span class="feature-tag badge-amber">KeyBERT Embeddings</span>
+                </div>
+            </div>
+
+            <!-- Feature 4: Named Entity Recognition -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper feature-icon-emerald">
+                        <i class="fa-solid fa-building-columns"></i>
+                    </div>
+                    <h3>Named Entity Recognition</h3>
+                    <p>
+                        Extract referenced universities, tech organizations, algorithms, researchers, and geographic citations seamlessly.
+                    </p>
+                    <span class="feature-tag badge-emerald">spaCy NLP Engine</span>
+                </div>
+            </div>
+
+            <!-- Feature 5: Reading Analytics -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper feature-icon-amber">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <h3>Document Analytics</h3>
+                    <p>
+                        Get instant metrics on total pages, word counts, and estimated reading times to plan your study workload.
+                    </p>
+                    <span class="feature-tag badge-amber">PyMuPDF Metrics</span>
+                </div>
+            </div>
+
+            <!-- Feature 6: Centralized Library -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper feature-icon-rose">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <h3>Secure Research Library</h3>
+                    <p>
+                        Maintain your personal library of papers with instant title searching, sorting, embedded viewing, and one-click downloads.
+                    </p>
+                    <span class="feature-tag badge-blue">Encrypted & Isolated</span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+
+<!-- ==========================================================================
+     WORKFLOW / HOW IT WORKS
+     ========================================================================== -->
+<section class="workflow-section">
+    <div class="container">
+
+        <div class="section-eyebrow">Seamless Workflow</div>
+        <h2 class="section-headline">How AI Research Assistant Works</h2>
+        <p class="section-subtext">Three simple steps to transform raw research PDFs into structured intelligence.</p>
+
+        <div class="row g-4 mt-2">
+            
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-number-badge">1</div>
+                    <h4>Upload PDF Paper</h4>
+                    <p>Drag and drop any scientific publication, conference preprint, or report in PDF format.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-number-badge">2</div>
+                    <h4>Automated AI Pipeline</h4>
+                    <p>Our deep learning models extract text, generate abstractive summaries, keywords, and entity graphs.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-number-badge">3</div>
+                    <h4>Explore & Interrogate</h4>
+                    <p>Review key takeaways, view side-by-side PDF pages, and query the assistant for instant answers.</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+
+<!-- ==========================================================================
+     CALL TO ACTION BANNER
+     ========================================================================== -->
+<section class="container my-5 py-4">
+    <div class="dash-hero-card text-center py-5">
+        <div class="dash-hero-badge">Get Started Today</div>
+        <h2 class="dash-hero-title mb-3">Ready to Supercharge Your Academic Research?</h2>
+        <p class="dash-hero-desc mx-auto mb-4">
+            Join now to organize and analyze your research papers with cutting-edge artificial intelligence.
+        </p>
+        <div>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('dashboard.dashboard_page') }}" class="btn-brand-primary btn-lg">
+                    <i class="fa-solid fa-table-columns"></i>
+                    <span>Open Dashboard</span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn-brand-primary btn-lg">
+                    <i class="fa-solid fa-sparkles"></i>
+                    <span>Create Account</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}

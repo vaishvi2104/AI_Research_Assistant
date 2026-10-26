@@ -1,0 +1,992 @@
+{% extends "base.html" %}
+
+{% block title %}{{ paper.title }} | AI Research Studio{% endblock %}
+
+{% block content %}
+<div class="studio-container-fluid">
+
+    <!-- ==========================================================================
+         TOP HEADER & PAPER METADATA BAR
+         ========================================================================== -->
+    <div class="studio-header-card">
+        
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('dashboard.dashboard_page') }}" class="text-decoration-none">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Library Dashboard
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">AI Research Studio</li>
+            </ol>
+        </nav>
+
+        <!-- Title & Action Buttons -->
+        <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+            <div class="flex-grow-1" style="max-width: 900px;">
+                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                    <span class="badge-tag-pill {% if paper.file_type == 'pdf' %}badge-rose{% elif paper.file_type == 'md' %}badge-purple{% else %}badge-blue{% endif %}">
+                        <i class="fa-solid {% if paper.file_type == 'pdf' %}fa-file-pdf{% else %}fa-file-lines{% endif %}"></i>
+                        {{ (paper.file_type or 'PDF')|upper }}
+                    </span>
+                    
+                    {% if paper.arxiv_id %}
+                        <span class="badge-tag-pill badge-purple">
+                            <i class="fa-solid fa-globe"></i> arXiv:{{ paper.arxiv_id }}
+                        </span>
+                    {% endif %}
+
+                    <!-- Project Collection Tag -->
+                    <div class="dropdown d-inline-block">
+                        <button class="badge-tag-pill badge-emerald border-0 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-folder me-1"></i> <span id="currentTagDisplay">{{ paper.folder_tag or 'General' }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-sm shadow">
+                            <li><h6 class="dropdown-header">Assign Project Folder</h6></li>
+                            <li><a class="dropdown-item small" href="javascript:void(0)" onclick="updatePaperTag('General')">📁 General</a></li>
+                            <li><a class="dropdown-item small" href="javascript:void(0)" onclick="updatePaperTag('Thesis')">📁 Thesis</a></li>
+                            <li><a class="dropdown-item small" href="javascript:void(0)" onclick="updatePaperTag('NLP Survey')">📁 NLP Survey</a></li>
+                            <li><a class="dropdown-item small" href="javascript:void(0)" onclick="updatePaperTag('Assignments')">📁 Assignments</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item small text-primary" href="javascript:void(0)" onclick="promptCustomTag()">+ Create Custom Folder Tag</a></li>
+                        </ul>
+                    </div>
+
+                    <h1 class="h3 mb-0 fw-bold text-dark">{{ paper.title }}</h1>
+                </div>
+
+                <p class="text-secondary small mb-2">
+                    <i class="fa-solid fa-user-pen me-1 text-primary"></i> <strong>Authors:</strong> {{ paper.authors or "Unknown Authors" }} &nbsp;|&nbsp;
+                    <i class="fa-regular fa-calendar me-1 text-primary"></i> <strong>Year:</strong> {{ paper.publication_year or "2026" }}
+                </p>
+
+                <div class="studio-meta-badges">
+                    <span class="meta-item-chip">
+                        <i class="fa-solid fa-file text-danger"></i>
+                        {{ paper.page_count or 1 }} Pages
+                    </span>
+                    <span class="meta-item-chip">
+                        <i class="fa-solid fa-align-left text-success"></i>
+                        {{ paper.word_count or 0 }} Words
+                    </span>
+                    <span class="meta-item-chip">
+                        <i class="fa-solid fa-clock text-warning"></i>
+                        ~{{ paper.reading_time or 1 }} min read
+                    </span>
+                    <span class="meta-item-chip">
+                        <i class="fa-solid fa-paperclip text-muted"></i>
+                        {{ paper.filename }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Header Action Buttons -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a href="{{ url_for('paper.export_report', paper_id=paper.id) }}" target="_blank" class="btn-brand-primary btn-sm" title="Export Literature Review Report">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Export Report</span>
+                </a>
+                <button class="btn-brand-secondary btn-sm" onclick="switchStudioTabByName('tabCitations')" title="Export Citations">
+                    <i class="fa-solid fa-quote-left text-primary"></i>
+                    <span>Cite</span>
+                </button>
+                <a href="{{ url_for('paper.download_paper', paper_id=paper.id) }}" class="btn-brand-secondary btn-sm" title="Download Document">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download</span>
+                </a>
+                <a href="{{ url_for('paper.delete_paper', paper_id=paper.id) }}" class="btn-brand-danger btn-sm" onclick="return confirm('Are you sure you want to delete this paper and all notes?');" title="Delete Paper">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Delete</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- AI Audio Briefing Player Widget -->
+        <div class="mt-3 pt-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2 bg-light p-3 rounded-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="avatar-ai chat-avatar-icon" style="width: 40px; height: 40px;">
+                    <i class="fa-solid fa-podcast"></i>
+                </div>
+                <div>
+                    <div class="fw-bold text-dark small"><i class="fa-solid fa-headphones text-primary me-1"></i> AI Audio Research Briefing (Podcast Overview)</div>
+                    <div class="text-muted small">Listen to a 2-minute spoken synthesis of objectives, methods, and findings</div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <button id="audioPlayBtn" class="btn btn-sm btn-primary rounded-pill px-3" onclick="toggleAudioBriefing()">
+                    <i class="fa-solid fa-play me-1" id="audioIcon"></i> <span id="audioLabel">Play Audio Briefing</span>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-2" onclick="stopAudioBriefing()" title="Stop audio">
+                    <i class="fa-solid fa-stop"></i>
+                </button>
+                <select id="audioSpeedSelect" class="form-select form-select-sm" style="width: 85px;" onchange="changeAudioSpeed(this.value)">
+                    <option value="1.0">1.0x</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                </select>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================================================
+         SPLIT WORKSPACE LAYOUT
+         ========================================================================== -->
+    <div class="research-studio-split">
+        
+        <!-- ======================================================================
+             LEFT PANE: LIVE DOCUMENT READER WITH HIGHLIGHT-TO-EXPLAIN
+             ====================================================================== -->
+        <div class="split-doc-pane" id="documentPane">
+            <div class="doc-pane-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-book-open text-primary"></i>
+                    <span>Document: {{ paper.filename }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-muted border small d-none d-md-inline">💡 Highlight text to explain</span>
+                    <a href="{{ url_for('paper.view_paper', paper_id=paper.id) }}" target="_blank" class="btn btn-sm btn-outline-secondary py-1 px-2 text-decoration-none" title="Open in separate tab">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Fullscreen
+                    </a>
+                </div>
+            </div>
+
+            {% if paper.file_type == 'pdf' %}
+                <div class="doc-iframe-container">
+                    <iframe src="{{ url_for('paper.view_paper', paper_id=paper.id) }}#toolbar=1" id="pdfFrame" title="PDF Document Viewer"></iframe>
+                </div>
+            {% else %}
+                <div class="text-doc-viewer" id="textDocContent">
+                    {{ paper.text }}
+                </div>
+            {% endif %}
+
+            <!-- Floating Highlight-to-Explain Tooltip -->
+            <div id="selectionPopup" class="position-absolute shadow-lg bg-dark text-white p-2 rounded-3" style="display: none; z-index: 1050;">
+                <div class="d-flex gap-1">
+                    <button class="btn btn-sm btn-primary py-0 px-2 small" onclick="triggerSelectionAction('explain')">
+                        <i class="fa-solid fa-lightbulb"></i> Explain
+                    </button>
+                    <button class="btn btn-sm btn-info py-0 px-2 small text-white" onclick="triggerSelectionAction('simplify')">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Simplify
+                    </button>
+                    <button class="btn btn-sm btn-warning py-0 px-2 small text-dark" onclick="triggerSelectionAction('note')">
+                        <i class="fa-solid fa-note-sticky"></i> Note
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ======================================================================
+             RIGHT PANE: AI RESEARCH COPILOT & WORKSPACE TABS
+             ====================================================================== -->
+        <div class="split-copilot-pane">
+            
+            <!-- Navigation Tabs -->
+            <div class="studio-tabs-nav">
+                <button class="studio-tab-btn active" id="btnTabChat" onclick="switchStudioTab(this, 'tabChat')">
+                    <i class="fa-solid fa-robot text-primary"></i>
+                    <span>AI Copilot</span>
+                </button>
+
+                <button class="studio-tab-btn" id="btnTabSynthesis" onclick="switchStudioTab(this, 'tabSynthesis')">
+                    <i class="fa-solid fa-wand-magic-sparkles text-indigo"></i>
+                    <span>Executive Synthesis</span>
+                </button>
+
+                <button class="studio-tab-btn" id="btnTabCitations" onclick="switchStudioTab(this, 'tabCitations')">
+                    <i class="fa-solid fa-quote-left text-success"></i>
+                    <span>Citations & BibTeX</span>
+                </button>
+
+                <button class="studio-tab-btn" id="btnTabNotes" onclick="switchStudioTab(this, 'tabNotes')">
+                    <i class="fa-solid fa-note-sticky text-amber"></i>
+                    <span>Notes</span>
+                </button>
+
+                <button class="studio-tab-btn" id="btnTabConcepts" onclick="switchStudioTab(this, 'tabConcepts')">
+                    <i class="fa-solid fa-key text-info"></i>
+                    <span>Concepts & NER</span>
+                </button>
+            </div>
+
+
+            <!-- ==================================================================
+                 TAB 1: INTERACTIVE AI COPILOT CHAT THREAD
+                 ================================================================== -->
+            <div id="tabChat" class="studio-tab-pane active">
+                <div class="copilot-chat-card">
+                    
+                    <!-- Chat Header -->
+                    <div class="chat-header-bar">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-ai chat-avatar-icon">
+                                <i class="fa-solid fa-brain"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Research Copilot</h6>
+                                <small class="text-muted">Hybrid RAG + Dense Semantic Embeddings</small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-sm btn-outline-secondary py-1 px-2 border-0 text-muted" onclick="clearChatHistory()" title="Reset chat thread">
+                                <i class="fa-solid fa-rotate-right me-1"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable Chat Messages List -->
+                    <div class="chat-messages-scroll" id="chatMessagesBox">
+                        {% for msg in chat_history %}
+                            {% if msg.sender == 'user' %}
+                                <div class="chat-msg-item chat-msg-user">
+                                    <div class="chat-avatar-icon avatar-user">
+                                        <i class="fa-solid fa-user"></i>
+                                    </div>
+                                    <div class="chat-bubble">
+                                        {{ msg.message }}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="chat-msg-item chat-msg-ai">
+                                    <div class="chat-avatar-icon avatar-ai">
+                                        <i class="fa-solid fa-robot"></i>
+                                    </div>
+                                    <div class="chat-bubble">
+                                        <div class="d-flex align-items-center justify-content-between mb-1 gap-2">
+                                            <span class="badge-tag-pill {{ msg.badge_class or 'badge-blue' }}">
+                                                {{ msg.confidence or 'AI Assistant' }}
+                                            </span>
+                                            {% if msg.is_web_search %}
+                                                <span class="badge-tag-pill badge-purple">
+                                                    <i class="fa-solid fa-globe"></i> Web
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="chat-msg-content" style="white-space: pre-line;">{{ msg.message }}</div>
+
+                                        {% if msg.evidence %}
+                                            <div class="chat-evidence-quote">
+                                                <i class="fa-solid fa-quote-left me-1 text-primary"></i>
+                                                {{ msg.evidence }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- Suggested Action Chips -->
+                    <div class="copilot-action-chips">
+                        <button class="action-chip-btn" onclick="sendQuickPrompt('What are the key contributions and novelty of this paper?')">
+                            💡 Key Contributions
+                        </button>
+                        <button class="action-chip-btn" onclick="sendQuickPrompt('Explain this paper like I am a beginner in simple terms')">
+                            👶 Explain Simply
+                        </button>
+                        <button class="action-chip-btn" onclick="sendQuickPrompt('What are the main limitations and weaknesses identified in this work?')">
+                            ⚠️ Limitations & Flaws
+                        </button>
+                        <button class="action-chip-btn" onclick="sendQuickPrompt('Generate a formal literature review paragraph for this paper')">
+                            📝 Literature Review Blurb
+                        </button>
+                    </div>
+
+                    <!-- Chat Input Bar -->
+                    <div class="chat-input-bar">
+                        <div class="web-search-toggle-wrap">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" role="switch" id="webSearchToggle">
+                                <label class="form-check-label fw-semibold text-secondary" for="webSearchToggle">
+                                    <i class="fa-solid fa-globe text-primary me-1"></i> Live arXiv & Web Search Grounding
+                                </label>
+                            </div>
+                            <span class="text-muted small" id="searchModeLabel">Document RAG Mode</span>
+                        </div>
+
+                        <form id="copilotForm" class="d-flex gap-2" onsubmit="handleChatSubmit(event)">
+                            <input
+                                type="text"
+                                id="chatInputText"
+                                class="form-control"
+                                placeholder="Ask anything about methodology, equations, results, or related literature..."
+                                required
+                                autocomplete="off">
+                            <button type="submit" id="chatSendBtn" class="btn-brand-primary px-3">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ==================================================================
+                 TAB 2: EXECUTIVE SYNTHESIS & STRUCTURED BREAKDOWN
+                 ================================================================== -->
+            <div id="tabSynthesis" class="studio-tab-pane">
+                <div class="studio-panel-card">
+                    
+                    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                        <div>
+                            <h4 class="fw-bold mb-1"><i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>Executive Summary</h4>
+                            <p class="text-muted small mb-0">Abstractive neural summary generated by DistilBART transformer</p>
+                        </div>
+                        <button class="btn-brand-secondary btn-sm" onclick="copyText('executiveSummaryText')">
+                            <i class="fa-regular fa-copy me-1"></i> Copy Summary
+                        </button>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 border mb-4 text-dark" id="executiveSummaryText" style="line-height: 1.7; font-size: 0.96rem;">
+                        {{ paper.summary or "Summary currently unavailable for this document." }}
+                    </div>
+
+                    <!-- 4-Card Structured Academic Matrix -->
+                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-cubes-stacked text-indigo me-2"></i>Structured Academic Synthesis</h5>
+                    
+                    <div class="synthesis-matrix-grid">
+                        
+                        <!-- Problem Statement -->
+                        <div class="matrix-card">
+                            <div class="matrix-card-header text-primary">
+                                <i class="fa-solid fa-bullseye fs-5"></i>
+                                <span>1. Core Problem & Objective</span>
+                            </div>
+                            <p>{{ structured.problem if structured and structured.problem else "Identifies computational and architectural bottlenecks in sequence modeling." }}</p>
+                        </div>
+
+                        <!-- Methodology -->
+                        <div class="matrix-card">
+                            <div class="matrix-card-header text-success">
+                                <i class="fa-solid fa-gears fs-5"></i>
+                                <span>2. Proposed Methodology</span>
+                            </div>
+                            <p>{{ structured.methodology if structured and structured.methodology else "Proposes a novel neural network architecture relying entirely on attention mechanisms." }}</p>
+                        </div>
+
+                        <!-- Findings -->
+                        <div class="matrix-card">
+                            <div class="matrix-card-header text-warning">
+                                <i class="fa-solid fa-chart-line fs-5"></i>
+                                <span>3. Results & Findings</span>
+                            </div>
+                            <p>{{ structured.findings if structured and structured.findings else "Achieves superior benchmark accuracy and state-of-the-art results with reduced training time." }}</p>
+                        </div>
+
+                        <!-- Limitations -->
+                        <div class="matrix-card">
+                            <div class="matrix-card-header text-danger">
+                                <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                                <span>4. Limitations & Scope</span>
+                            </div>
+                            <p>{{ structured.limitations if structured and structured.limitations else "High memory footprint during large sequence scaling; requires substantial labeled corpora." }}</p>
+                        </div>
+
+                    </div>
+
+                    <div class="mt-4 text-end">
+                        <button class="btn btn-sm btn-outline-primary" onclick="appendSynthesisToNotes()">
+                            <i class="fa-solid fa-plus me-1"></i> Send Synthesis to Research Notebook
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ==================================================================
+                 TAB 3: CITATIONS & BIBLIOGRAPHY
+                 ================================================================== -->
+            <div id="tabCitations" class="studio-tab-pane">
+                <div class="studio-panel-card">
+                    
+                    <h4 class="fw-bold mb-1"><i class="fa-solid fa-quote-left text-success me-2"></i>Academic Citation Generator</h4>
+                    <p class="text-muted small mb-4">Formatted citations ready to export for BibTeX, APA, IEEE, and MLA formats</p>
+
+                    <!-- BibTeX -->
+                    <div class="citation-box-card">
+                        <div class="citation-header-row">
+                            <span class="badge-tag-pill badge-purple"><i class="fa-solid fa-code"></i> BibTeX (LaTeX)</span>
+                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="copyText('bibtexCode')">
+                                <i class="fa-regular fa-copy me-1"></i> Copy
+                            </button>
+                        </div>
+                        <pre class="citation-code-block" id="bibtexCode">{{ citations.bibtex }}</pre>
+                    </div>
+
+                    <!-- APA 7th Edition -->
+                    <div class="citation-box-card">
+                        <div class="citation-header-row">
+                            <span class="badge-tag-pill badge-blue">APA 7th Edition</span>
+                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="copyText('apaCode')">
+                                <i class="fa-regular fa-copy me-1"></i> Copy
+                            </button>
+                        </div>
+                        <div class="citation-text-block" id="apaCode">{{ citations.apa }}</div>
+                    </div>
+
+                    <!-- IEEE Format -->
+                    <div class="citation-box-card">
+                        <div class="citation-header-row">
+                            <span class="badge-tag-pill badge-emerald">IEEE Format</span>
+                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="copyText('ieeeCode')">
+                                <i class="fa-regular fa-copy me-1"></i> Copy
+                            </button>
+                        </div>
+                        <div class="citation-text-block" id="ieeeCode">{{ citations.ieee }}</div>
+                    </div>
+
+                    <!-- MLA 9th Edition -->
+                    <div class="citation-box-card">
+                        <div class="citation-header-row">
+                            <span class="badge-tag-pill badge-amber">MLA 9th Edition</span>
+                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="copyText('mlaCode')">
+                                <i class="fa-regular fa-copy me-1"></i> Copy
+                            </button>
+                        </div>
+                        <div class="citation-text-block" id="mlaCode">{{ citations.mla }}</div>
+                    </div>
+
+                    <!-- Extracted References -->
+                    <hr class="my-4">
+                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-list-ol text-secondary me-2"></i>Extracted References in Document ({{ references|length }})</h5>
+                    
+                    {% if references %}
+                        <div class="p-3 bg-light rounded-3 border" style="max-height: 260px; overflow-y: auto;">
+                            <ol class="mb-0 ps-3">
+                                {% for ref in references %}
+                                    <li class="small text-secondary mb-2">{{ ref }}</li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                    {% else %}
+                        <p class="text-muted small">No distinct references list parsed from this text.</p>
+                    {% endif %}
+
+                </div>
+            </div>
+
+
+            <!-- ==================================================================
+                 TAB 4: RESEARCH NOTEBOOK
+                 ================================================================== -->
+            <div id="tabNotes" class="studio-tab-pane">
+                <div class="studio-panel-card">
+                    
+                    <div class="notes-container">
+                        <div class="notes-toolbar-row">
+                            <div>
+                                <h4 class="fw-bold mb-1"><i class="fa-solid fa-note-sticky text-amber me-2"></i>Research Notebook</h4>
+                                <p class="text-muted small mb-0">Personal notes, experiment logs, and key takeaway highlights</p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="text-muted small" id="notesStatusIndicator">All changes saved</span>
+                                <button class="btn-brand-primary btn-sm" onclick="saveResearchNotes()">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i> Save Notes
+                                </button>
+                            </div>
+                        </div>
+
+                        <textarea
+                            id="researchNotesTextarea"
+                            class="notes-textarea"
+                            placeholder="Write your research takeaways, thesis annotations, and critiques here... (Auto-saves every 5 seconds)">{{ paper.notes or '' }}</textarea>
+
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="insertNoteTemplate('hypothesis')">
+                                    + Research Hypothesis
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="insertNoteTemplate('experiment')">
+                                    + Experiment Setup
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="insertNoteTemplate('critique')">
+                                    + Critical Review
+                                </button>
+                            </div>
+                            <button class="btn btn-sm btn-outline-dark" onclick="downloadNotesAsFile()">
+                                <i class="fa-solid fa-download me-1"></i> Export Notes (.txt)
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ==================================================================
+                 TAB 5: KEY CONCEPTS & NAMED ENTITIES
+                 ================================================================== -->
+            <div id="tabConcepts" class="studio-tab-pane">
+                <div class="studio-panel-card">
+                    
+                    <!-- Keywords -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-1"><i class="fa-solid fa-key text-info me-2"></i>Key Concepts (KeyBERT)</h5>
+                                <p class="text-muted small mb-0">Click any keyword tag to ask the Copilot to explain its role in this paper</p>
+                            </div>
+                        </div>
+
+                        {% if paper.keywords %}
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for kw in paper.keywords.split(',') %}
+                                    {% if kw.strip() %}
+                                        <button class="action-chip-btn" onclick="queryKeywordTag('{{ kw.strip() }}')">
+                                            <i class="fa-solid fa-tag text-info"></i>
+                                            <span>{{ kw.strip() }}</span>
+                                        </button>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted small">No keywords detected for this document.</p>
+                        {% endif %}
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Named Entities -->
+                    <div>
+                        <h5 class="fw-bold mb-1"><i class="fa-solid fa-building-columns text-purple me-2"></i>Named Entities (spaCy NER)</h5>
+                        <p class="text-muted small mb-3">Extracted researchers, universities, technologies, and organizations</p>
+
+                        {% if paper.entities %}
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for ent in paper.entities.split(',') %}
+                                    {% if ent.strip() %}
+                                        <span class="meta-item-chip">
+                                            <i class="fa-solid fa-fingerprint text-purple"></i>
+                                            <span>{{ ent.strip() }}</span>
+                                        </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted small">No named entities detected.</p>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const paperId = {{ paper.id }};
+    const audioScriptText = `{{ paper.audio_script or paper.summary or 'No briefing available' }}`;
+
+    // Speech Synthesis (Audio Briefing)
+    let isPlayingAudio = false;
+    let synth = window.speechSynthesis;
+    let utterance = null;
+    let playbackRate = 1.0;
+
+    function toggleAudioBriefing() {
+        if (!synth) {
+            alert('Your browser does not support Speech Synthesis audio playback.');
+            return;
+        }
+
+        if (isPlayingAudio) {
+            synth.pause();
+            isPlayingAudio = false;
+            document.getElementById('audioIcon').className = 'fa-solid fa-play me-1';
+            document.getElementById('audioLabel').innerText = 'Resume Briefing';
+        } else {
+            if (synth.paused) {
+                synth.resume();
+            } else {
+                synth.cancel();
+                utterance = new SpeechSynthesisUtterance(audioScriptText);
+                utterance.rate = playbackRate;
+                utterance.pitch = 1.0;
+                
+                utterance.onend = function() {
+                    isPlayingAudio = false;
+                    document.getElementById('audioIcon').className = 'fa-solid fa-play me-1';
+                    document.getElementById('audioLabel').innerText = 'Play Audio Briefing';
+                };
+
+                synth.speak(utterance);
+            }
+            isPlayingAudio = true;
+            document.getElementById('audioIcon').className = 'fa-solid fa-pause me-1';
+            document.getElementById('audioLabel').innerText = 'Pause Briefing';
+        }
+    }
+
+    function stopAudioBriefing() {
+        if (synth) synth.cancel();
+        isPlayingAudio = false;
+        document.getElementById('audioIcon').className = 'fa-solid fa-play me-1';
+        document.getElementById('audioLabel').innerText = 'Play Audio Briefing';
+    }
+
+    function changeAudioSpeed(val) {
+        playbackRate = parseFloat(val);
+        if (isPlayingAudio && synth) {
+            stopAudioBriefing();
+            toggleAudioBriefing();
+        }
+    }
+
+    // Highlight-to-Explain Listener in Document Viewer
+    let currentSelectedText = '';
+    const popup = document.getElementById('selectionPopup');
+
+    document.addEventListener('mouseup', function(e) {
+        const sel = window.getSelection();
+        const text = sel ? sel.toString().trim() : '';
+
+        if (text && text.length > 5 && text.length < 500) {
+            currentSelectedText = text;
+            if (popup) {
+                popup.style.display = 'block';
+                popup.style.left = `${Math.min(window.innerWidth - 220, e.pageX + 10)}px`;
+                popup.style.top = `${e.pageY - 40}px`;
+            }
+        } else {
+            if (popup && !popup.contains(e.target)) {
+                popup.style.display = 'none';
+            }
+        }
+    });
+
+    async function triggerSelectionAction(action) {
+        if (!currentSelectedText) return;
+        popup.style.display = 'none';
+
+        if (action === 'note') {
+            const notes = document.getElementById('researchNotesTextarea');
+            if (notes) {
+                notes.value += `\n\n> "${currentSelectedText}"\n`;
+                switchStudioTabByName('tabNotes');
+                saveResearchNotes();
+            }
+            return;
+        }
+
+        switchStudioTabByName('tabChat');
+        const prompt = action === 'simplify' 
+            ? `Explain this text in very simple terms: "${currentSelectedText}"`
+            : `Explain the meaning and context of this excerpt in the paper: "${currentSelectedText}"`;
+        
+        sendQuickPrompt(prompt);
+    }
+
+    // Project Tag Updating
+    async function updatePaperTag(tag) {
+        try {
+            const res = await fetch(`/api/paper/${paperId}/tag`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tag: tag })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                document.getElementById('currentTagDisplay').innerText = data.tag;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function promptCustomTag() {
+        const custom = prompt('Enter custom project folder name (e.g. Thesis Chapter 2):');
+        if (custom && custom.trim()) {
+            updatePaperTag(custom.trim());
+        }
+    }
+
+    // Tab Switching
+    function switchStudioTab(buttonElement, tabId) {
+        document.querySelectorAll('.studio-tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.studio-tab-pane').forEach(pane => pane.classList.remove('active'));
+
+        buttonElement.classList.add('active');
+        const target = document.getElementById(tabId);
+        if (target) target.classList.add('active');
+    }
+
+    function switchStudioTabByName(tabId) {
+        const btnMap = {
+            'tabChat': 'btnTabChat',
+            'tabSynthesis': 'btnTabSynthesis',
+            'tabCitations': 'btnTabCitations',
+            'tabNotes': 'btnTabNotes',
+            'tabConcepts': 'btnTabConcepts'
+        };
+        const btnId = btnMap[tabId];
+        if (btnId) {
+            const btn = document.getElementById(btnId);
+            if (btn) switchStudioTab(btn, tabId);
+        }
+    }
+
+    // Web Search Toggle Listener
+    document.getElementById('webSearchToggle')?.addEventListener('change', function() {
+        const label = document.getElementById('searchModeLabel');
+        if (this.checked) {
+            label.innerHTML = '<span class="text-purple fw-bold"><i class="fa-solid fa-globe"></i> Live arXiv & Web Search</span>';
+        } else {
+            label.innerText = 'Document RAG Mode';
+        }
+    });
+
+    // Chat Message Submission via AJAX
+    async function handleChatSubmit(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById('chatInputText');
+        const sendBtn = document.getElementById('chatSendBtn');
+        const isWebSearch = document.getElementById('webSearchToggle')?.checked || false;
+        const msgText = input.value.trim();
+
+        if (!msgText) return;
+
+        appendUserMessageToUI(msgText);
+        input.value = '';
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        const thinkingId = 'thinking_' + Date.now();
+        appendThinkingBubble(thinkingId, isWebSearch);
+
+        try {
+            const response = await fetch(`/api/chat/${paperId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: msgText,
+                    use_web_search: isWebSearch
+                })
+            });
+
+            const data = await response.json();
+            removeThinkingBubble(thinkingId);
+
+            if (data.status === 'success') {
+                appendAiResponseToUI(data.ai_response);
+            } else {
+                appendAiResponseToUI({
+                    message: data.error || 'Failed to process request.',
+                    badge_class: 'badge-amber',
+                    confidence: 'Error',
+                    evidence: null
+                });
+            }
+        } catch (err) {
+            removeThinkingBubble(thinkingId);
+            appendAiResponseToUI({
+                message: 'An error occurred communicating with the AI Copilot. Please verify connection.',
+                badge_class: 'badge-rose',
+                confidence: 'Connection Error',
+                evidence: null
+            });
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+        }
+    }
+
+    function sendQuickPrompt(promptText) {
+        const input = document.getElementById('chatInputText');
+        if (input) {
+            input.value = promptText;
+            handleChatSubmit(null);
+        }
+    }
+
+    function queryKeywordTag(keyword) {
+        switchStudioTabByName('tabChat');
+        sendQuickPrompt(`How is "${keyword}" defined and utilized in this paper?`);
+    }
+
+    function appendUserMessageToUI(text) {
+        const box = document.getElementById('chatMessagesBox');
+        const div = document.createElement('div');
+        div.className = 'chat-msg-item chat-msg-user';
+        div.innerHTML = `
+            <div class="chat-avatar-icon avatar-user">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="chat-bubble">
+                ${escapeHtml(text)}
+            </div>
+        `;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function appendThinkingBubble(id, isWeb) {
+        const box = document.getElementById('chatMessagesBox');
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = 'chat-msg-item chat-msg-ai';
+        div.innerHTML = `
+            <div class="chat-avatar-icon avatar-ai">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="chat-bubble text-muted small">
+                <i class="fa-solid fa-spinner fa-spin me-2"></i>
+                <span>${isWeb ? 'Searching arXiv & live academic web...' : 'Reading document context with RAG embeddings...'}</span>
+            </div>
+        `;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function removeThinkingBubble(id) {
+        const elem = document.getElementById(id);
+        if (elem) elem.remove();
+    }
+
+    function appendAiResponseToUI(ai) {
+        const box = document.getElementById('chatMessagesBox');
+        const div = document.createElement('div');
+        div.className = 'chat-msg-item chat-msg-ai';
+
+        let evidenceHtml = '';
+        if (ai.evidence) {
+            evidenceHtml = `
+                <div class="chat-evidence-quote">
+                    <i class="fa-solid fa-quote-left me-1 text-primary"></i>
+                    ${escapeHtml(ai.evidence)}
+                </div>
+            `;
+        }
+
+        div.innerHTML = `
+            <div class="chat-avatar-icon avatar-ai">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="chat-bubble">
+                <div class="d-flex align-items-center justify-content-between mb-1 gap-2">
+                    <span class="badge-tag-pill ${ai.badge_class || 'badge-blue'}">
+                        ${ai.confidence || 'AI Response'}
+                    </span>
+                    ${ai.is_web_search ? '<span class="badge-tag-pill badge-purple"><i class="fa-solid fa-globe"></i> Web</span>' : ''}
+                </div>
+                <div class="chat-msg-content" style="white-space: pre-line;">${formatMarkdownLinks(ai.message)}</div>
+                ${evidenceHtml}
+            </div>
+        `;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function clearChatHistory() {
+        if (!confirm('Are you sure you want to clear this conversation history?')) return;
+        try {
+            await fetch(`/api/clear-chat/${paperId}`, { method: 'POST' });
+            document.getElementById('chatMessagesBox').innerHTML = `
+                <div class="text-center text-muted small py-4">
+                    <i class="fa-solid fa-broom me-1"></i> Conversation cleared. Ask a new question above!
+                </div>
+            `;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Auto-Save Notes Feature
+    let notesTimer = null;
+    const notesTextarea = document.getElementById('researchNotesTextarea');
+    const notesIndicator = document.getElementById('notesStatusIndicator');
+
+    notesTextarea?.addEventListener('input', function() {
+        notesIndicator.innerText = 'Unsaved changes...';
+        clearTimeout(notesTimer);
+        notesTimer = setTimeout(saveResearchNotes, 3500);
+    });
+
+    async function saveResearchNotes() {
+        if (!notesTextarea) return;
+        notesIndicator.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+        try {
+            const res = await fetch(`/api/notes/${paperId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notes: notesTextarea.value })
+            });
+            const data = await res.json();
+            if (data.status === 'saved') {
+                const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                notesIndicator.innerText = `Saved at ${now}`;
+            }
+        } catch (e) {
+            notesIndicator.innerText = 'Error saving notes';
+        }
+    }
+
+    function insertNoteTemplate(type) {
+        if (!notesTextarea) return;
+        const templates = {
+            'hypothesis': '\n\n### 🔬 Research Hypothesis\n- Problem Statement: \n- Target Metric / Goal: \n- Baseline Compared: ',
+            'experiment': '\n\n### ⚙️ Experimental Configuration\n- Dataset: \n- Model Parameters: \n- Key Findings: ',
+            'critique': '\n\n### ⚠️ Critical Review & Limitations\n- Strengths: \n- Methodological Weaknesses: \n- Future Research Directions: '
+        };
+        notesTextarea.value += (templates[type] || '');
+        notesTextarea.focus();
+        saveResearchNotes();
+    }
+
+    function appendSynthesisToNotes() {
+        const summary = document.getElementById('executiveSummaryText')?.innerText || '';
+        if (notesTextarea) {
+            notesTextarea.value += `\n\n### 📑 Executive Synthesis Summary\n${summary}\n`;
+            switchStudioTabByName('tabNotes');
+            saveResearchNotes();
+            alert('Executive synthesis added to your notebook!');
+        }
+    }
+
+    function downloadNotesAsFile() {
+        const text = notesTextarea?.value || '';
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Notes_${paperId}.txt`;
+        a.click();
+    }
+
+    function copyText(elemId) {
+        const text = document.getElementById(elemId)?.innerText || '';
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Copied to clipboard!');
+        });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>"']/g, function(m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+    }
+
+    function formatMarkdownLinks(text) {
+        if (!text) return '';
+        return text.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-primary fw-bold text-decoration-underline">$1</a>');
+    }
+
+    window.addEventListener('load', () => {
+        const box = document.getElementById('chatMessagesBox');
+        if (box) box.scrollTop = box.scrollHeight;
+    });
+</script>
+{% endblock %}

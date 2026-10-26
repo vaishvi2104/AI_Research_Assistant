@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account | AI Research Assistant{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+
+        <div class="auth-header">
+            <div class="auth-icon-circle">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h2 class="auth-title">Create Account</h2>
+            <p class="auth-subtitle">Start analyzing research papers with AI</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            
+            <!-- Full Name -->
+            <div class="form-group-custom">
+                <label for="name">Full Name</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-user input-icon-left"></i>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        class="form-control-custom"
+                        placeholder="Dr. Jane Doe / Alex Smith"
+                        value="{{ name or '' }}"
+                        required
+                        autofocus>
+                </div>
+            </div>
+
+            <!-- Email Address -->
+            <div class="form-group-custom">
+                <label for="email">Academic or Personal Email</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-envelope input-icon-left"></i>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-control-custom"
+                        placeholder="name@university.edu"
+                        value="{{ email or '' }}"
+                        required>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group-custom">
+                <label for="password">Create Password</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-lock input-icon-left"></i>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="form-control-custom"
+                        placeholder="Minimum 6 characters"
+                        required>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-brand-primary w-100 py-3 mt-2">
+                <i class="fa-solid fa-sparkles"></i>
+                <span>Get Started</span>
+            </button>
+
+        </form>
+
+        <div class="auth-footer-text">
+            <span>Already have an account?</span>
+            <a href="{{ url_for('auth.login') }}" class="ms-1">Sign In</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
